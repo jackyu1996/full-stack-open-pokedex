@@ -9,8 +9,9 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  simple_deployment_pipeline:
+  deploy:
     runs-on: ubuntu-18.04
+    name: deploy
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -40,3 +41,19 @@ jobs:
           healthcheck: "https://fso2020-pokedex.herokuapp.com/health"
           checkstring: "ok"
           rollbackonhealthcheckfailed: true
+  tag:
+    runs-on: ubuntu-18.04
+    name: tag
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: bump version and push tag
+        if: |
+          github.event_name == 'push' &&
+          !contains(join(toJson(github.event.commits.*.message)), '#skip')
+        needs: deploy
+        uses: anothrNick/github-tag-action@eca2b69f9e2c24be7decccd0f15fdb1ea5906598
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: "patch"
