@@ -27,3 +27,12 @@ jobs:
           command: npm run test:e2e
           start: npm run start-prod
           wait-on: http://localhost:5000
+      - name: deploy to heroku
+        uses: akhileshns/heroku-deploy@v3.8.8
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_email: "jackyu1996@hotmail.com"
+          heroku_app_name: "fso2020-pokedex"
+          healthcheck: "https://fso2020-pokedex.herokuapp.com/health"
+          checkstring: "ok"
+          rollbackonhealthcheckfailed: true
