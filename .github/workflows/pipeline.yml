@@ -1,4 +1,6 @@
 name: Deployment pipeline
+env:
+  DEPLOY_URL: "https://fso2020-pokedex.herokuapp.com"
 
 on:
   push:
@@ -34,12 +36,36 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         uses: akhileshns/heroku-deploy@v3.8.8
         with:
-          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_email: "jackyu1996@hotmail.com"
           heroku_app_name: "fso2020-pokedex"
-          healthcheck: "https://fso2020-pokedex.herokuapp.com/health"
+          healthcheck: ${{ env.DEPLOY_URL }}/health
           checkstring: "ok"
           rollbackonhealthcheckfailed: true
+      - name: notify success to slack
+        if: ${{ success() }}
+        uses: 8398a7/action-slack@v3
+        with:
+          channel: '#code'
+          status: custom
+          custom_payload: |
+            {
+              attachments: [{
+                  color: "#29b781",
+                  text: `a new version deployed to ${process.env.DEPLOY_URL} (${process.env.AS_COMMIT}) by ${process.env.AS_AUTHOR} build took {process.env.AS_TOOK}`
+                }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: notify fail to slack
+        if: ${{ failure() }}
+        uses: 8398a7/action-slack@v3
+        with:
+          channel: '#code'
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   tag:
     needs: deploy
     runs-on: ubuntu-18.04
