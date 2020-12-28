@@ -1,0 +1,14 @@
+name: Health Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  health_check:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Check deployed service
+        uses: jtalk/url-health-check-action@v1.2
+        with:
+          url: https://fso2020-pokedex.herokuapp.com
